@@ -37,7 +37,7 @@ Plaintext
 Cloner le projet
 
 Bash
-git clone §§§
+git clone https://github.com/Premier-Bouedi/appkwebgeston
 cd vision-shopflow
 Installer les dépendances
 
