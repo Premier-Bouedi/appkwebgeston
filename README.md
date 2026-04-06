@@ -15,7 +15,7 @@ Prédiction IA : Interface permettant de saisir les caractéristiques d'un produ
 Tableau de Bord : Interface web fluide réalisée avec Streamlit.
 
 🛠️ Technologies Utilisées
-Langage : Python 3.x
+Langage : Python 
 
 Data Science : Pandas, NumPy, Matplotlib
 
