@@ -37,7 +37,7 @@ Plaintext
 Cloner le projet
 
 Bash
-git clone https://github.com/Cleinn-Magnaga/vision-shopflow.git
+git clone §§§
 cd vision-shopflow
 Installer les dépendances
 
