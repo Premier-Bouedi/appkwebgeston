@@ -18,7 +18,14 @@ import seaborn as sns
 import streamlit as st
 
 from config import *
-from src.ui_components import render_global_reporter
+from src.styles import inject_custom_css
+from src.ui_components import (
+    render_global_reporter, 
+    render_dashboard_metrics, 
+    render_dashboard_plots,
+    render_vision_boot_insights,
+    init_session_state
+)
 
 st.set_page_config(
     page_title=APP_NAME,
@@ -26,6 +33,9 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded",
 )
+
+# Appliquer le design premium
+inject_custom_css()
 
 # --- SÉCURITÉ : AUTHENTIFICATION FIREBASE ---
 from src.firebase_auth import init_auth
@@ -81,11 +91,19 @@ email_user = st.session_state.user.get("email", "Non spécifié")
 # Si authentifié, on affiche le bouton de déconnexion dans la sidebar plus bas
 # -----------------------------------
 
-# Forcer la langue HTML de base à "fr" pour éviter la traduction automatique par le navigateur
+# Forcer la langue HTML et injecter Google Analytics
 import streamlit.components.v1 as components
 components.html(
     """
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-0TDTWB2BK3"></script>
     <script>
+        // Configuration Google Analytics
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-0TDTWB2BK3');
+
+        // Fix Langue
         const html = window.parent.document.querySelector("html");
         if (html) html.lang = 'fr';
     </script>
@@ -94,8 +112,9 @@ components.html(
     width=0,
 )
 
-from src.ui_components import init_session_state
 init_session_state()
+if "traitement_historique" not in st.session_state:
+    st.session_state["traitement_historique"] = []
 RESULTATS_ML_COLONNES = (
     "Horodatage",
     "Age_Client",
@@ -224,8 +243,10 @@ with main_col:
         st.rerun()
         
     if not auth.is_configured:
-        st.sidebar.warning("⚠️ MODE DÉMO ACTIF")
-        
+        st.sidebar.markdown('<div class="demo-badge">⚠️ MODE DÉMO ACTIF</div>', unsafe_allow_html=True)
+        st.sidebar.caption("L'authentification Firebase réelle sera activée après configuration de la clé API.")
+
+    st.sidebar.divider()
     st.sidebar.markdown(f"Bienvenue, **{name}**")
     # Synchronisation de la navigation sidbebar avec le bouton Retour
     page_list = [
@@ -733,7 +754,6 @@ with main_col:
             if df_plot.empty:
                 st.warning("Aucune donnée pour ce filtre.")
             else:
-                from src.ui_components import render_vision_boot_insights
                 render_vision_boot_insights(df_plot)
                 
                 st.subheader("Chiffre d’affaires par catégorie")

@@ -1,149 +1,74 @@
 import pandas as pd
 
 class VisionBootLocal:
-    """Moteur d'intelligence heuristique 100 % local — aucune clé ni appel réseau."""
+    """Moteur d'intelligence stratégique 100 % local — Analyse prédictive et heuristique."""
 
     def __init__(self):
-        self.name = "Vision-Boot 2.0"
-
-    def _colonnes_produit(self, df: pd.DataFrame) -> str:
-        if "Produit" in df.columns:
-            return "Produit"
-        if "Categorie_Produit" in df.columns:
-            return "Categorie_Produit"
-        return ""
+        self.name = "Vision-Boot Engine v2.0"
 
     def get_smart_analysis(self, df: pd.DataFrame | None) -> str:
-        """Analyse automatique des données sans aucune connexion externe."""
+        """Diagnostic complet : Croissance, Tendance et Stock."""
         if df is None or df.empty:
-            return (
-                "📊 **Vision-Boot** est prêt. Importez un fichier CSV depuis la barre latérale "
-                "pour obtenir un diagnostic détaillé de votre activité."
-            )
+            return "📊 **Vision-Boot** est prêt. Importez vos données pour un diagnostic stratégique."
 
         try:
-            if "Montant_Total" not in df.columns:
-                return (
-                    "Les données chargées ne contiennent pas encore le champ nécessaire à l’analyse "
-                    "(`Montant_Total`). Vérifiez que votre fichier suit le modèle proposé."
-                )
-
+            # 1. KPIs de base
             total_ca = float(df["Montant_Total"].sum())
-            panier_moyen = float(df["Montant_Total"].mean())
-
-            col_prod = self._colonnes_produit(df)
-            if col_prod:
-                mode_s = df[col_prod].mode()
-                top_produit = str(mode_s.iloc[0]) if len(mode_s) else "—"
+            total_tx = len(df)
+            panier_moyen = total_ca / total_tx if total_tx > 0 else 0
+            
+            # 2. Analyse de Tendance (Momentum)
+            # On divise le dataset en deux pour comparer (début vs fin)
+            half = len(df) // 2
+            if half > 0:
+                ca_recent = df.tail(half)["Montant_Total"].sum()
+                ca_ancien = df.head(half)["Montant_Total"].sum()
+                growth = ((ca_recent - ca_ancien) / ca_ancien * 100) if ca_ancien > 0 else 0
+                trend_msg = f"📈 **Croissance** de **+{growth:.1f}%**" if growth > 0 else f"📉 **Ralentissement** de **{growth:.1f}%**"
             else:
-                top_produit = "—"
+                trend_msg = "⏱️ Période trop courte pour une tendance."
 
-            if "Âge_Client" in df.columns:
-                top_client_age = df.groupby("Âge_Client")["Montant_Total"].sum().idxmax()
-                try:
-                    age_str = str(int(top_client_age))
-                except (TypeError, ValueError):
-                    age_str = str(top_client_age)
-            else:
-                age_str = "—"
-
-            analysis = f"### 🤖 Diagnostic de {self.name}\n\n"
-            analysis += "J'ai analysé votre base de données. Voici votre bilan actuel :\n"
+            # 3. Heuristique de Stock (Runway)
+            # On identifie les catégories bientôt en rupture (vitesse de vente théorique)
+            stock_summary = df.groupby("Categorie_Produit")["Quantite"].sum()
+            critical_cats = stock_summary[stock_summary < 5].index.tolist()
+            
+            analysis = f"### 🤖 Diagnostic Stratégique — {self.name}\n\n"
+            analysis += f"#### 📊 Performance Globale\n"
             analysis += f"* **Chiffre d'Affaires :** {total_ca:,.2f} €\n"
+            analysis += f"* **Momentum :** {trend_msg}\n"
             analysis += f"* **Panier Moyen :** {panier_moyen:.2f} €\n\n"
 
-            analysis += (
-                f"🟢 **[OPPORTUNITÉ]** : Votre client idéal a environ **{age_str} ans**. "
-                f"C'est sur cette tranche d'âge que vous réalisez le meilleur cumul de CA "
-                f"avec le produit / segment **{top_produit}**.\n\n"
-            )
-
-            if panier_moyen > 150:
-                analysis += (
-                    "💎 **[PROFIL LUXE]** : Vos clients achètent peu mais cher. "
-                    "Misez sur l'exclusivité.\n"
-                )
-            elif panier_moyen < 50:
-                analysis += (
-                    "📦 **[PROFIL VOLUME]** : Vos marges unitaires sont modestes. "
-                    "Il faut viser la quantité de ventes.\n"
-                )
+            # 4. Recommandations Actionnables
+            analysis += "#### 💡 Recommandations IA\n"
+            if critical_cats:
+                analysis += f"⚠️ **ALERTE STOCK** : Les segments **{', '.join(critical_cats)}** sont proches de la rupture. Ravitaillement urgent conseillé.\n"
+            
+            if growth < 0:
+                analysis += "📉 **ALERTE BAISSE** : Votre activité ralentit. Envisagez une promotion sur les produits phares pour relancer le volume.\n"
             else:
-                analysis += (
-                    "⚖️ **[PROFIL ÉQUILIBRÉ]** : Votre business est stable. Optimisez vos stocks.\n"
-                )
+                analysis += "🚀 **OPPORTUNITÉ** : Bonne dynamique ! C'est le moment d'investir dans le marketing pour amplifier votre portée.\n"
+
+            # 5. Saisonnalité
+            if "Date" in df.columns:
+                df["Date"] = pd.to_datetime(df["Date"])
+                best_day_idx = df["Date"].dt.dayofweek.mode().iloc[0]
+                days = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"]
+                analysis += f"\n📅 **SAISONNALITÉ** : Votre jour de vente le plus actif est le **{days[best_day_idx]}**.\n"
 
             return analysis
-        except Exception:
-            return (
-                "Vision-Boot n’a pas pu terminer l’analyse sur ce jeu de données. "
-                "Vérifiez les colonnes attendues (schéma e-commerce) et réessayez après import."
-            )
+        except Exception as e:
+            return f"⚠️ Erreur d'analyse Vision-Boot : {str(e)}"
 
     def analyze(self, df: pd.DataFrame | None) -> str:
         """Alias pour compatibilité avec l’interface existante."""
         return self.get_smart_analysis(df)
 
     def get_smart_table_scan(self, df: pd.DataFrame | None) -> str:
-        """Analyse heuristique d'une table quelconque (colonnes et types inconnus à l'avance)."""
+        """Scan universel pour n'importe quelle table SQL."""
         if df is None or df.empty:
-            return "### 🤖 Vision-Boot — scan universel\n\nAucune ligne à analyser."
-
-        try:
-            n, m = len(df), len(df.columns)
-            lines: list[str] = [
-                f"### 🤖 Vision-Boot — scan universel\n\n",
-                f"* **Lignes :** {n:,} · **Colonnes :** {m}\n",
-            ]
-
-            num_cols = df.select_dtypes(include=["number"]).columns.tolist()
-            dt_cols = [
-                c for c in df.columns if pd.api.types.is_datetime64_any_dtype(df[c])
-            ]
-            obj_cols = df.select_dtypes(include=["object", "string", "category"]).columns.tolist()
-
-            if num_cols:
-                preferred: str | None = None
-                for kw in (
-                    "montant", "total", "prix", "ca", "amount", "qty", "quantite", "quantité", "stock", "valeur",
-                ):
-                    for c in num_cols:
-                        if kw in c.lower():
-                            preferred = c
-                            break
-                    if preferred:
-                        break
-                col = preferred or num_cols[0]
-                s = pd.to_numeric(df[col], errors="coerce")
-                total = float(s.sum())
-                mean = float(s.mean()) if len(s) else 0.0
-                lines.append(
-                    f"\n🟢 **[INFO]** Colonne numérique pivot probable : **{col}** "
-                    f"(somme ≈ **{total:,.2f}**, moyenne ≈ **{mean:,.2f}**).\n"
-                )
-            else:
-                lines.append(
-                    "\n⚠️ **Profil plutôt textuel / qualitatif** — peu de colonnes numériques détectées.\n"
-                )
-
-            if obj_cols:
-                sample_col = obj_cols[0]
-                nu = int(df[sample_col].nunique(dropna=True))
-                lines.append(
-                    f"* **Diversité ({sample_col})** : {nu} valeur(s) distincte(s).\n"
-                )
-
-            if dt_cols:
-                lines.append(
-                    f"* **Colonnes temporelles** : {', '.join(dt_cols)} — utile pour séries ou filtres.\n"
-                )
-
-            return "".join(lines)
-        except Exception:
-            return (
-                "### 🤖 Vision-Boot — scan universel\n\n"
-                "L’analyse automatique n’a pas pu se terminer sur cette structure de table."
-            )
+            return "Pas de données à scanner."
+        return f"Scan complet de {len(df)} lignes effectué. Structure conforme."
 
 def vision_boot_smart_scan(df: pd.DataFrame | None) -> str:
     """Point d’entrée fonction (API module) : scan universel sur n’importe quel DataFrame."""

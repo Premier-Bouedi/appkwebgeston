@@ -1,5 +1,6 @@
 import streamlit as st
 import datetime
+import pandas as pd
 from config import MODEL_FEATURES
 from src.assistant_local import VisionBootLocal
 from src.reporter import generate_full_pdf_report
@@ -153,6 +154,64 @@ def render_return_home_button():
     if st.button("⬅️ Retour au Tableau de Bord"):
         st.session_state["main_nav"] = "Tableau de bord"
         st.rerun()
+
+def render_dashboard_metrics(df, metrics=None):
+    """Affiche les indicateurs clés (KPI) en haut du tableau de bord avec style."""
+    col1, col2, col3, col4 = st.columns(4)
+    
+    total_ca = df["Montant_Total"].sum()
+    total_tx = len(df)
+    panier_moyen = total_ca / total_tx if total_tx > 0 else 0
+    
+    # Détection stock critique (< 5 unités)
+    stock_summary = df.groupby("Categorie_Produit")["Quantite"].sum()
+    low_stock_count = (stock_summary < 5).sum()
+    
+    col1.metric("💰 Chiffre d'Affaire", f"{total_ca:,.0f} €", help="Revenu total généré")
+    col2.metric("📦 Volume Ventes", f"{total_tx:,}", help="Nombre total de transactions")
+    col3.metric("🛒 Panier Moyen", f"{panier_moyen:.1f} €", help="Valeur moyenne par achat")
+    
+    if low_stock_count > 0:
+        col4.metric("🚨 Stocks Critiques", low_stock_count, delta=f"{low_stock_count} Ruptures", delta_color="inverse")
+    else:
+        col4.metric("✅ État Stocks", "Optimal", delta="0")
+
+def render_dashboard_plots(df):
+    """Génère les graphiques pour le tableau de bord principal (Seaborn/Matplotlib)."""
+    import matplotlib.pyplot as plt
+    import seaborn as sns
+    import numpy as np
+
+    st.divider()
+    c1, c2 = st.columns(2)
+    
+    with c1:
+        st.subheader("📈 Évolution temporelle (CA)")
+        # On simule un axe temporel si la colonne Date est présente
+        if "Date" in df.columns:
+            df["Date"] = pd.to_datetime(df["Date"])
+            daily_sales = df.groupby(df["Date"].dt.date)["Montant_Total"].sum()
+            fig, ax = plt.subplots(figsize=(8, 4))
+            ax.plot(daily_sales.index, daily_sales.values, marker='o', color="#1f77b4")
+            plt.xticks(rotation=45)
+            ax.set_ylabel("€")
+            st.pyplot(fig)
+            plt.close(fig)
+        else:
+            st.info("Ajoutez une colonne 'Date' pour voir l'évolution temporelle.")
+
+    with c2:
+        st.subheader("📊 Répartition par Catégorie")
+        cat_ca = df.groupby("Categorie_Produit")["Montant_Total"].sum().sort_values(ascending=False)
+        if not cat_ca.empty:
+            fig, ax = plt.subplots(figsize=(8, 4))
+            colors = sns.color_palette("viridis", n_colors=len(cat_ca))
+            ax.pie(cat_ca.values, labels=cat_ca.index, autopct='%1.1f%%', colors=colors, startangle=140)
+            ax.axis('equal')
+            st.pyplot(fig)
+            plt.close(fig)
+        else:
+            st.info("Aucune catégorie détectée.")
 
 
 def render_vision_boot_insights(df, model_metrics=None):

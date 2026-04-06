@@ -9,7 +9,9 @@ class FirebaseAuth:
     
     def __init__(self):
         self.api_key = st.secrets.get("firebase", {}).get("api_key", "...")
-        self.is_configured = self.api_key not in ["...", "", None]
+        # Liste des valeurs qui indiquent une clé non encore configurée
+        placeholders = ["...", "", None, "VOTRE_CLE_API_ICI", "TA_CLE_ICI"]
+        self.is_configured = self.api_key not in placeholders
         self.base_url = "https://identitytoolkit.googleapis.com/v1/accounts"
 
     def login(self, email, password):
