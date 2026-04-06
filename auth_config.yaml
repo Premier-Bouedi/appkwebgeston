@@ -1,0 +1,17 @@
+credentials:
+  usernames:
+    admin:
+      email: admin@vision-boot.com
+      name: Administrateur
+      password: "$2b$12$9onutHaSJOg8Vo1/Y9aljeKj.Du6k3QpKzrKsmdi16QHkfQBbE71O"
+    treedji:
+      email: treedji@vision-boot.com
+      name: Treedji
+      password: "$2b$12$4qc.BV3MYkxOsKs0irH.Z.QF99aA2Kc21LNug1OFl1AMCg/Vcoq4u"
+cookie:
+  expiry_days: 30
+  key: "vision_boot_cookie_key"
+  name: "vision_boot_auth"
+preauthorized:
+  emails:
+    - user@example.com

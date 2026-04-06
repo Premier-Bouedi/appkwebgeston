@@ -1,0 +1,12 @@
+streamlit
+pandas
+numpy
+matplotlib
+seaborn
+scikit-learn
+streamlit-authenticator
+pyyaml
+SQLAlchemy
+fpdf2
+# sqlite3 est natif
+requests
