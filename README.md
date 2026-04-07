@@ -1,4 +1,8 @@
-📦 Vision-ShopFlow : IA & Visualisation E-commerce
+# 📦 Vision-ShopFlow : IA & Visualisation E-commerce
+[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://visionboot.streamlit.app/)
+
+> **Accéder à l'application en direct :** [visionboot.streamlit.app](https://visionboot.streamlit.app/)
+
 Projet Académique - 2ème Année IT Développement Module : Introduction à l'IA et Machine Learning
 
 📝 Présentation du Projet
