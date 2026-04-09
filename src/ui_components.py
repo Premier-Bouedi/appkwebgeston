@@ -81,7 +81,7 @@ def render_vision_boot_bot(model_engine=None):
         if st.session_state.get("df_cleaned") is not None:
             if st.button("✨ Lancer Vision-Boot", use_container_width=True, type="primary", key="btn_vision_analyze"):
                 with st.status("Vision-Boot scanne vos ventes..."):
-                    rapport = local.get_smart_analysis(st.session_state["df_cleaned"])
+                    rapport = local.get_smart_analysis(st.session_state["df_cleaned"], model_manager=model_engine)
                 st.session_state["vision_boot_messages"].append(
                     {"role": "assistant", "content": rapport}
                 )
@@ -142,7 +142,7 @@ def render_vision_boot_bot(model_engine=None):
                 placeholder = st.empty()
                 df = st.session_state.get("df_cleaned")
                 with st.status("Vision-Boot prépare votre réponse..."):
-                    full_response = local.get_smart_analysis(df)
+                    full_response = local.get_smart_analysis(df, model_manager=model_engine)
                 placeholder.markdown(full_response)
 
         st.session_state["vision_boot_messages"].append({"role": "assistant", "content": full_response})
@@ -260,8 +260,32 @@ def render_vision_boot_insights(df, model_metrics=None):
     if model_metrics and model_metrics.get("best_algo") != "N/A":
         st.info(
             f"🧠 **Note de Vision-Boot** : J'ai sélectionné le modèle **{model_metrics['best_algo']}** "
-            f"car il offre la meilleure précision ($R^2$ = {model_metrics['r2']:.4f})."
+            f"car il offre la meilleure précision ($R^2$ = {model_metrics['r2']*100:.1f}%, MSE = {model_metrics['mse']:,.0f})."
         )
+        
+        # Affichage du graphique de Feature Importance s'il est disponible
+        from src.model_manager import ModelManager
+        from config import MODEL_PATH
+        engine = ModelManager(MODEL_PATH)
+        top_features = engine.get_top_features(5) if hasattr(engine, 'get_top_features') else {}
+
+        if top_features:
+            st.markdown("#### 🎯 Facteurs d'Influence (Découvert par l'IA)")
+            st.caption("Qu'est-ce qui influence vraiment le montant du panier dans votre boutique ?")
+            
+            import matplotlib.pyplot as plt
+            import seaborn as sns
+            
+            fig_fi, ax_fi = plt.subplots(figsize=(8, 3))
+            
+            names = [str(k).replace("Categorie_Produit_", "Catégorie : ").replace("_", " ") for k in top_features.keys()]
+            values = list(top_features.values())
+            
+            sns.barplot(x=values, y=names, ax=ax_fi, palette="viridis")
+            ax_fi.set_xlabel("Importance (%)")
+            ax_fi.set_ylabel("")
+            st.pyplot(fig_fi)
+            plt.close(fig_fi)
 
         if "store_profile" in model_metrics:
             st.divider()
